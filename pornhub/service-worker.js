@@ -5,7 +5,7 @@ let replace_domains = {
 }
 
 let block_url = [
-    'pornhub.com/_xa/',
+    '/_xa/ads',
     'static.trafficjunky.com',
     'www.google',
     'hubt.pornhub',
