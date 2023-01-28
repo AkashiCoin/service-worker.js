@@ -7,7 +7,8 @@ const corsHeaders = {
 let CACHE
 
 const get_key_from_url = async (url) => {
-    let key = url.pathname.split('.urlset')[0]
+    let sp = url.pathname.split('/').pop()
+    let key = url.hostname + url.pathname.replace('/' + sp, '').replace('.urlset', '');
     return key;
 }
 
@@ -21,13 +22,14 @@ const save_url = async (url) => {
         return
     }
     let value = url.search;
+    let ttl = url.searchParams.get('ttl') ? url.searchParams.get('ttl') : url.searchParams.get('validto');
     let options = {
         metadata: {
             timestamp: Date.now() / 1000
         },
-        expirationTtl: 7200
+        expiration: ttl
     };
-    await CACHE.put(key, value, options);
+    return await CACHE.put(key, value, options);
 }
 
 const delete_key = async (url) => {
@@ -37,7 +39,7 @@ const delete_key = async (url) => {
 
 const get_search = async (url) => {
     let key = await get_key_from_url(url);
-    let value = await CACHE.get(key);
+    let value = await CACHE.get(key, { cacheTtl: 7200 });
     if (value) {
         return value;
     }
@@ -48,7 +50,7 @@ const get_search = async (url) => {
 
 const get_search_metadata = async (url) => {
     let key = await get_key_from_url(url);
-    let value = await CACHE.getWithMetadata(key);
+    let value = await CACHE.getWithMetadata(key, { cacheTtl: 7200 });
     console.log(value);
     if (value) {
         return value;
@@ -69,10 +71,11 @@ async function handleRequest(request) {
         })
     }
     let url = new URL(request.url);
+
     if (url.pathname.endsWith('master.m3u8')) {
         await save_url(url);
     }
-    else if (url.pathname.search('.urlset') > 0) {
+    else if (url.pathname.startsWith('/hls/videos')) {
         let search = await get_search(url);
         if (search) {
             url.search = search;
@@ -81,9 +84,9 @@ async function handleRequest(request) {
             return new Response(null, { status: 404 });
         }
     }
+
     url.hostname = url.hostname.split('.')[0] + '.phncdn.com';
     let new_request_headers = new Headers(request.headers);
-    console.log(new_request_headers);
 
     new_request_headers.set('Host', url.hostname);
     new_request_headers.set('origin', url.hostname);

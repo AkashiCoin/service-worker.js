@@ -26,7 +26,7 @@ self.onfetch = event => {
             return event.respondWith(new Response(null, {status: 204}))
         }
     }
-    if (url.pathname.search('.urlset') !== -1) {
+    if (url.pathname.startsWith('/hls/videos')) {
         if (url.pathname.endsWith('master.m3u8')) {
             url.hostname = url.hostname.replace('phncdn.com','phncdn.cf')
             return event.respondWith(fetch(new Request(url.href, event.request)))
