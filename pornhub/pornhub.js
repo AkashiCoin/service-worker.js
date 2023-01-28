@@ -52,7 +52,7 @@ async function handleRequest(request) {
     if (!url.hostname.startsWith('hubt') && original_response.headers.get('content-type').startsWith('text/html')) {
         res_body = await original_response.text();
         res_body = res_body.replace(/pornhub.com/g, config.pornhub_domain);
-        res_body = res_body.replace(/phncdn.com/g, config.phncdn_domain);
+        // res_body = res_body.replace(/phncdn.com/g, config.phncdn_domain);
         res_body = res_body.replace(/!func.isInWhitelist\(\)/g, 'false');
         // res_body = res_body.replace(/static.trafficjunky/g, 'block_trafficjunky');
         // res_body = res_body.replace(/www.etahub/g, 'block_etahub');
