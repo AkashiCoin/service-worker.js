@@ -27,6 +27,11 @@ self.onfetch = event => {
             return event.respondWith(new Response(null, {status: 204}))
         }
     }
+    if (url.pathname.search('.urlset') !== -1 && !url.pathname.endsWith('master.m3u8')) {
+        url.search = ''
+        let request = new Request(url.href, event.request)
+        return event.respondWith(fetch(request))
+    }
     for (let domain in replace_domains) {
         if (url.hostname.endsWith(domain)) {
             url.hostname = url.hostname.replace(domain, replace_domains[domain])
