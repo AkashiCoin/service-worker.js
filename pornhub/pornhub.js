@@ -10,7 +10,43 @@ const corsHeaders = {
 }
 
 async function sw() {
-    return new Response((await fetch("https://raw.githubusercontent.com/AkashiCoin/service-worker.js/master/pornhub/service-worker.js")).body, {
+    return new Response(`// service-worker.js
+    let replace_domains = {
+        'pornhub.com': 'pornhubc.cf',
+        'phncdn.com': 'phncdn.cf',
+    }
+    
+    let block_url = [
+        '/_xa/ads',
+        'static.trafficjunky.com',
+        'www.google',
+        'hubt.pornhub',
+        'etahub.com',
+    ]
+    
+    self.addEventListener('install', () => {
+        self.skipWaiting()
+    })
+    
+    self.addEventListener('activate', event => {
+        event.waitUntil(self.clients.claim())
+    })
+    
+    self.onfetch = event => {
+        let url = new URL(event.request.url)
+        for (let i = 0; i < block_url.length; i++) {
+            if (url.href.search(block_url[i]) !== -1) {
+                return event.respondWith(new Response(null, {status: 204}))
+            }
+        }
+        for (let domain in replace_domains) {
+            if (url.hostname.endsWith(domain)) {
+                url.hostname = url.hostname.replace(domain, replace_domains[domain])
+                let request = new Request(url.href, event.request)
+                return event.respondWith(fetch(request))
+            }
+        }
+    }`, {
         cf: {
             minify: { javascript: true, css: true, html: true },
         },
@@ -54,15 +90,14 @@ async function handleRequest(request) {
     if (!url.hostname.startsWith('hubt') && original_response.headers.get('content-type').startsWith('text/html')) {
         res_body = await original_response.text();
         res_body = res_body.replace(/pornhub.com/g, config.pornhub_domain);
-        // res_body = res_body.replace(/phncdn.com/g, config.phncdn_domain);
+        res_body = res_body.replace(/phncdn.com/g, config.phncdn_domain);
         res_body = res_body.replace(/!func.isInWhitelist\(\)/g, 'false');
         // res_body = res_body.replace(/static.trafficjunky/g, 'block_trafficjunky');
         // res_body = res_body.replace(/www.etahub/g, 'block_etahub');
         // res_body = res_body.replace(/js_error.php/g, 'block_js_error');
         // res_body = res_body.replace(/www.google/g, 'block_google');
         res_body = res_body.replace(/window.navigator && 'serviceWorker' in navigator/g, 'false');
-        res_body = res_body.replace(/<head>/g,
-            `<head><script>if ('serviceWorker' in navigator) {
+        res_body = res_body.replace(/<head>/g,`<head><script>if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
         console.log('Registration succeeded. Scope is ' + reg.scope);
     }).catch(function (error) {

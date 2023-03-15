@@ -1,6 +1,7 @@
 // service-worker.js
 let replace_domains = {
     'pornhub.com': 'pornhubc.cf',
+    'phncdn.com': 'phncdn.cf',
 }
 
 let block_url = [
