@@ -119,14 +119,26 @@ async function handleRequest(request, ctx) {
                 // for a max of 5 seconds before revalidating the resource
                 cacheTtl: 31536000,
                 cacheEverything: true,
+                cacheKey: cacheUrl.toString(),
             },
             headers: new_request_headers
         })
-        let res = response.clone();
-        res.headers.set('Cache-Control', 's-maxage=31536000');
-        ctx.waitUntil(cache.put(cacheUrl, res));
+        if ((response.status >= 200 && response.status < 300) || response.status == 304) {
+            response = new Response(response.body, response);
+            response.headers.append('Cache-Control', 's-maxage=31536000');
+            ctx.waitUntil(cache.put(cacheUrl, response.clone()));
+            console.log(`[MISS] Cache put for: ${cacheUrl}.`);
+        }
+        else {
+            console.log(`[ERROR] Response is not ok.`);
+        }
+        let log_headers = []
+        response.headers.forEach((value, key) => {
+            log_headers.push(`${key}: ${value}`);
+        });
+        console.log(...log_headers, response.status);
     } else {
-        console.log(`Cache hit for: ${request.url}.`);
+        console.log(`[HIT] Cache hit for: ${cacheUrl}.`);
     }
 
     // if (url.pathname.endsWith('master.m3u8')) {
