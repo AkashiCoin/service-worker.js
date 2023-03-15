@@ -23,6 +23,7 @@ async function sw() {
 
 async function handleRequest(request) {
     let url = new URL(request.url);
+    let origin = url.hostname;
     if (url.pathname.endsWith('sw.js')) {
         return await sw();
     }
@@ -38,6 +39,7 @@ async function handleRequest(request) {
     let body = request.body;
 
     new_request_headers.set('Host', url.hostname);
+    new_request_headers.set('Origin', url.hostname);
     new_request_headers.set('Referer', 'https://wwww.pornhub.com');
 
     let original_response = await fetch(url.href, {
@@ -60,7 +62,7 @@ async function handleRequest(request) {
         // res_body = res_body.replace(/www.google/g, 'block_google');
         res_body = res_body.replace(/window.navigator && 'serviceWorker' in navigator/g, 'false');
         res_body = res_body.replace(/<head>/g,
-`<head><script>if ('serviceWorker' in navigator) {
+            `<head><script>if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
         console.log('Registration succeeded. Scope is ' + reg.scope);
     }).catch(function (error) {
@@ -77,7 +79,13 @@ async function handleRequest(request) {
     if (new_headers.get('set-cookie')) {
         new_headers.set('set-cookie', new_headers.get('set-cookie').replace(/pornhub.com/g, config.pornhub_domain))
     }
-
+    if (new_request_headers.get('cookie')) {
+        new_headers.set('Access-Control-Allow-Origin', origin);
+        new_headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+    if (new_headers.get('location')) {
+        new_headers.set('location', new_headers.get('location').replace(/pornhub.com/g, config.pornhub_domain))
+    }
     response = new Response(res_body, {
         status: original_response.status,
         headers: new_headers

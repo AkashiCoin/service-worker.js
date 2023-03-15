@@ -26,15 +26,20 @@ self.onfetch = event => {
             return event.respondWith(new Response(null, {status: 204}))
         }
     }
-    if (url.pathname.startsWith('/hls/videos')) {
-        if (url.pathname.endsWith('master.m3u8')) {
-            url.hostname = url.hostname.replace('phncdn.com','phncdn.cf')
-            return event.respondWith(fetch(new Request(url.href, event.request)))
-        }
-        url.search = ''
-        let request = new Request(url.href, event.request)
-        return event.respondWith(fetch(request))
-    }
+    // if (url.pathname.startsWith('/video/get_media')) {
+    //     url.hostname = "jsproxy.moehome.repl.co"
+    //     url.pathname = "/pornhub" + url.pathname
+    //     return event.respondWith(fetch(new Request(url.href, event.request)))
+    // }
+    // if (url.pathname.startsWith('/hls/videos')) {
+    //     if (url.pathname.endsWith('master.m3u8')) {
+    //         url.hostname = url.hostname.replace('phncdn.com','phncdn.cf')
+    //         return event.respondWith(fetch(new Request(url.href, event.request)))
+    //     }
+    //     url.search = ''
+    //     let request = new Request(url.href, event.request)
+    //     return event.respondWith(fetch(request))
+    // }
     for (let domain in replace_domains) {
         if (url.hostname.endsWith(domain)) {
             url.hostname = url.hostname.replace(domain, replace_domains[domain])
